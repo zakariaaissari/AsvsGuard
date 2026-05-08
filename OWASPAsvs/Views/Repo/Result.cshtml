@@ -1,0 +1,338 @@
+@model OWASPAsvs.Models.ScanResultViewModel
+@using OWASPAsvs.Core.Entities
+@{
+    ViewData["Title"] = "Scan Results";
+
+    var allFindings = Model.FindingsByCategory
+        .SelectMany(g => g.Value.Select(f => (Category: g.Key, Finding: f)))
+        .ToList();
+
+    var missingList = allFindings.Where(x => x.Finding.Status == FindingStatus.Missing).OrderBy(x => x.Finding.Code).ToList();
+    var partialList = allFindings.Where(x => x.Finding.Status == FindingStatus.Partial).OrderBy(x => x.Finding.Code).ToList();
+    var presentList = allFindings.Where(x => x.Finding.Status == FindingStatus.Present).OrderBy(x => x.Finding.Code).ToList();
+
+    var total      = Model.TotalExigences > 0 ? Model.TotalExigences : 1;
+    var pctPresent = (int)((double)Model.PresentCount / total * 100);
+    var pctPartial = (int)((double)Model.PartialCount / total * 100);
+    var pctMissing = (int)((double)Model.MissingCount / total * 100);
+
+    // SVG compliance ring — r=52, circumference ≈ 326.7
+    const double r = 52, circ = 2 * Math.PI * r;
+    var dashOffset = (int)(circ * (1.0 - Model.CompliancePercent / 100.0));
+    var ringColor  = Model.CompliancePercent >= 80 ? "#22c55e"
+                   : Model.CompliancePercent >= 50 ? "#f59e0b"
+                   : "#ef4444";
+}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <div class="page-hdr" style="margin-bottom:4px">
+            <h1>Scan Results</h1>
+        </div>
+        <div style="font-size:.8rem;color:var(--text-muted)">
+            <a href="@Model.RepoUrl" target="_blank" rel="noopener" style="color:var(--text-muted)">@Model.RepoUrl</a>
+            &nbsp;·&nbsp; @Model.Branch
+            &nbsp;·&nbsp; @Model.ScannedAt.ToString("MMM d, yyyy HH:mm")
+        </div>
+    </div>
+    <a asp-action="Index" class="btn-px btn-ghost" style="font-size:.82rem;padding:8px 14px;flex-shrink:0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        New Scan
+    </a>
+</div>
+
+@if (Model.Status == RepoScanStatus.Failed)
+{
+    <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5;padding:14px 18px;border-radius:var(--radius);margin-bottom:20px;font-size:.875rem">
+        <strong>Scan failed.</strong>
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage)) { <span> @Model.ErrorMessage</span> }
+        <a asp-action="Index" style="color:#fca5a5;text-decoration:underline;margin-left:8px">Try again</a>
+    </div>
+}
+
+<!-- Summary row -->
+<div class="row g-3 mb-4 align-items-center">
+
+    <!-- Compliance ring -->
+    <div class="col-auto">
+        <div class="card-dark p-4 d-flex align-items-center gap-4">
+            <div class="ring-wrap">
+                <svg width="120" height="120" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="@r" fill="none" stroke="var(--dark-border)" stroke-width="10"/>
+                    <circle cx="60" cy="60" r="@r" fill="none" stroke="@ringColor" stroke-width="10"
+                            stroke-dasharray="@circ.ToString("F1")" stroke-dashoffset="@dashOffset"
+                            stroke-linecap="round" transform="rotate(-90 60 60)"
+                            style="transition:stroke-dashoffset 1s ease"/>
+                </svg>
+                <div class="ring-label">
+                    <div style="font-size:1.5rem;font-weight:800;color:@ringColor;line-height:1">@Model.CompliancePercent%</div>
+                    <div style="font-size:.65rem;color:var(--text-muted);font-weight:500">compliant</div>
+                </div>
+            </div>
+            <div class="d-flex flex-column gap-2">
+                <div style="font-size:.78rem;color:var(--text-muted)">
+                    <span style="color:#fca5a5;font-weight:700;font-size:1.1rem">@Model.MissingCount</span>
+                    &nbsp;Missing
+                </div>
+                <div style="font-size:.78rem;color:var(--text-muted)">
+                    <span style="color:#fcd34d;font-weight:700;font-size:1.1rem">@Model.PartialCount</span>
+                    &nbsp;Partial
+                </div>
+                <div style="font-size:.78rem;color:var(--text-muted)">
+                    <span style="color:#86efac;font-weight:700;font-size:1.1rem">@Model.PresentCount</span>
+                    &nbsp;Passing
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress breakdown -->
+    <div class="col">
+        <div class="card-dark p-4">
+            <div style="font-size:.8rem;font-weight:600;color:var(--text-secondary);margin-bottom:14px">Compliance breakdown</div>
+            <div class="d-flex flex-column gap-3">
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-muted);margin-bottom:5px">
+                        <span>Passing</span><span style="color:#86efac;font-weight:600">@pctPresent%</span>
+                    </div>
+                    <div class="prog-track">
+                        <div class="prog-fill" style="width:@pctPresent%;background:linear-gradient(90deg,#22c55e,#4ade80)"></div>
+                    </div>
+                </div>
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-muted);margin-bottom:5px">
+                        <span>Partial</span><span style="color:#fcd34d;font-weight:600">@pctPartial%</span>
+                    </div>
+                    <div class="prog-track">
+                        <div class="prog-fill" style="width:@pctPartial%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div>
+                    </div>
+                </div>
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-muted);margin-bottom:5px">
+                        <span>Missing</span><span style="color:#fca5a5;font-weight:600">@pctMissing%</span>
+                    </div>
+                    <div class="prog-track">
+                        <div class="prog-fill" style="width:@pctMissing%;background:linear-gradient(90deg,#ef4444,#f87171)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tab navigation -->
+<ul class="nav gap-1 mb-3" id="resultTabs" role="tablist" style="border-bottom:1px solid var(--dark-border);padding-bottom:0">
+    <li class="nav-item" role="presentation">
+        <button class="pill-btn active" data-bs-toggle="tab" data-bs-target="#tab-missing" type="button" role="tab">
+            Missing
+            <span style="background:rgba(239,68,68,.15);color:#fca5a5;border-radius:20px;padding:1px 8px;font-size:.7rem;margin-left:4px">@Model.MissingCount</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="pill-btn" data-bs-toggle="tab" data-bs-target="#tab-partial" type="button" role="tab">
+            Partial
+            <span style="background:rgba(245,158,11,.15);color:#fcd34d;border-radius:20px;padding:1px 8px;font-size:.7rem;margin-left:4px">@Model.PartialCount</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="pill-btn" data-bs-toggle="tab" data-bs-target="#tab-present" type="button" role="tab">
+            Passing
+            <span style="background:rgba(34,197,94,.15);color:#86efac;border-radius:20px;padding:1px 8px;font-size:.7rem;margin-left:4px">@Model.PresentCount</span>
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="resultTabContent">
+
+    <!-- MISSING TAB -->
+    <div class="tab-pane fade show active" id="tab-missing" role="tabpanel">
+        @if (!missingList.Any())
+        {
+            <div style="text-align:center;padding:40px;color:var(--text-muted)">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" style="margin-bottom:10px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                <p style="font-size:.875rem">No missing requirements — excellent work!</p>
+            </div>
+        }
+        else
+        {
+            foreach (var item in missingList)
+            {
+                var f = item.Finding;
+                <div class="finding-card fc-missing">
+                    <div class="finding-hdr">
+                        <span class="badge-status badge-missing">Missing</span>
+                        <strong style="font-family:monospace;font-size:.85rem;color:var(--text-primary)">ASVS @f.Code</strong>
+                        <span style="font-size:.78rem;color:var(--text-muted);flex:1">@f.Description</span>
+                        <span class="badge-cat">@item.Category</span>
+                    </div>
+                    <div class="finding-body">
+                        @if (!string.IsNullOrEmpty(f.FilePath))
+                        {
+                            <div style="margin-bottom:10px;font-size:.78rem">
+                                <span style="color:var(--text-muted)">File:</span>
+                                <code style="color:#a5b4fc;margin-left:4px">@f.FilePath@(f.Line.HasValue ? $":{f.Line}" : "")</code>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(f.VulnerableCode))
+                        {
+                            <div style="margin-bottom:10px">
+                                <div style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--danger);margin-bottom:5px">Vulnerable code</div>
+                                <div class="code-block">@f.VulnerableCode</div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(f.Issue))
+                        {
+                            <div style="margin-bottom:8px;font-size:.82rem">
+                                <span style="color:var(--danger);font-weight:600">Issue:</span>
+                                <span style="color:var(--text-secondary);margin-left:5px">@f.Issue</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(f.Suggestion))
+                        {
+                            <div style="margin-bottom:10px;font-size:.82rem">
+                                <span style="color:var(--success);font-weight:600">Fix:</span>
+                                <span style="color:var(--text-secondary);margin-left:5px">@f.Suggestion</span>
+                            </div>
+                        }
+                        <button class="btn-px btn-ghost ask-ai-btn" style="font-size:.78rem;padding:6px 12px;margin-top:4px"
+                                data-code="@f.Code"
+                                data-description="@f.Description"
+                                data-filepath="@(f.FilePath ?? "")"
+                                data-line="@(f.Line?.ToString() ?? "")"
+                                data-suggestion="@(f.Suggestion ?? "")"
+                                data-status="@f.Status">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/></svg>
+                            Ask AI how to fix →
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- PARTIAL TAB -->
+    <div class="tab-pane fade" id="tab-partial" role="tabpanel">
+        @if (!partialList.Any())
+        {
+            <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:.875rem">
+                No partial implementations found.
+            </div>
+        }
+        else
+        {
+            foreach (var item in partialList)
+            {
+                var f = item.Finding;
+                <div class="finding-card fc-partial">
+                    <div class="finding-hdr">
+                        <span class="badge-status badge-partial">Partial</span>
+                        <strong style="font-family:monospace;font-size:.85rem;color:var(--text-primary)">ASVS @f.Code</strong>
+                        <span style="font-size:.78rem;color:var(--text-muted);flex:1">@f.Description</span>
+                        <span class="badge-cat">@item.Category</span>
+                    </div>
+                    <div class="finding-body">
+                        @if (!string.IsNullOrEmpty(f.FilePath))
+                        {
+                            <div style="margin-bottom:10px;font-size:.78rem">
+                                <span style="color:var(--text-muted)">File:</span>
+                                <code style="color:#a5b4fc;margin-left:4px">@f.FilePath@(f.Line.HasValue ? $":{f.Line}" : "")</code>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(f.VulnerableCode))
+                        {
+                            <div style="margin-bottom:10px">
+                                <div style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--warning);margin-bottom:5px">Code found</div>
+                                <div class="code-block" style="color:#fcd34d">@f.VulnerableCode</div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(f.Issue))
+                        {
+                            <div style="margin-bottom:8px;font-size:.82rem">
+                                <span style="color:var(--warning);font-weight:600">Issue:</span>
+                                <span style="color:var(--text-secondary);margin-left:5px">@f.Issue</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(f.Suggestion))
+                        {
+                            <div style="margin-bottom:10px;font-size:.82rem">
+                                <span style="color:var(--success);font-weight:600">Fix:</span>
+                                <span style="color:var(--text-secondary);margin-left:5px">@f.Suggestion</span>
+                            </div>
+                        }
+                        <button class="btn-px btn-ghost ask-ai-btn" style="font-size:.78rem;padding:6px 12px;margin-top:4px"
+                                data-code="@f.Code"
+                                data-description="@f.Description"
+                                data-filepath="@(f.FilePath ?? "")"
+                                data-line="@(f.Line?.ToString() ?? "")"
+                                data-suggestion="@(f.Suggestion ?? "")"
+                                data-status="@f.Status">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/></svg>
+                            Ask AI how to fix →
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- PRESENT TAB -->
+    <div class="tab-pane fade" id="tab-present" role="tabpanel">
+        @if (!presentList.Any())
+        {
+            <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:.875rem">
+                No passing requirements detected.
+            </div>
+        }
+        else
+        {
+            <div class="card-dark" style="overflow:hidden">
+                @foreach (var item in presentList)
+                {
+                    var f = item.Finding;
+                    <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(51,65,85,.4)">
+                        <span class="badge-status badge-compliant" style="font-size:.68rem;padding:1px 7px">✓</span>
+                        <code style="color:var(--text-muted);font-size:.78rem;min-width:55px">@f.Code</code>
+                        <span style="font-size:.8rem;color:var(--text-secondary);flex:1">@f.Description</span>
+                        <span class="badge-cat d-none d-md-inline">@item.Category</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.ask-ai-btn');
+    if (!btn) return;
+
+    var finding = {
+        code:        btn.dataset.code,
+        description: btn.dataset.description,
+        filePath:    btn.dataset.filepath   || null,
+        line:        btn.dataset.line       || null,
+        suggestion:  btn.dataset.suggestion || null,
+        status:      btn.dataset.status
+    };
+
+    window.chatContext  = JSON.stringify(finding);
+    window.chatAutoSend = true;
+
+    document.getElementById('chat-banner-code').textContent   = 'ASVS ' + finding.code;
+    document.getElementById('chat-banner-status').textContent = finding.status;
+    document.getElementById('chat-banner-status').className   =
+        finding.status === 'Missing' ? 'badge-status badge-missing' : 'badge-status badge-partial';
+    document.getElementById('chat-banner-desc').textContent   = finding.description;
+
+    var fileEl = document.getElementById('chat-banner-file');
+    fileEl.textContent = finding.filePath ? finding.filePath + (finding.line ? ':' + finding.line : '') : '';
+
+    document.getElementById('chat-context-banner').classList.remove('d-none');
+    document.getElementById('chat-input').placeholder = 'Ask about ASVS ' + finding.code + '…';
+    window.openChatPanel?.();
+});
+</script>
+}

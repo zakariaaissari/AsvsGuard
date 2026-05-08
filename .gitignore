@@ -1,0 +1,9 @@
+bin/
+obj/
+appsettings.Development.json
+*.user
+.rider/
+.vs/
+*.suo
+.DS_Store
+

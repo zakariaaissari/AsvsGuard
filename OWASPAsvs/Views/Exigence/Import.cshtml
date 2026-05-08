@@ -1,0 +1,124 @@
+@{
+    ViewData["Title"] = "Import ASVS Excel";
+}
+
+<div class="page-hdr">
+    <h1>Import ASVS Excel</h1>
+    <p>Upload the official OWASP ASVS 4.0 checklist to populate the database</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+
+        <form asp-action="Import" method="post" enctype="multipart/form-data" id="import-form">
+            <div asp-validation-summary="All" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5;padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:18px;font-size:.85rem"></div>
+
+            <!-- Drop zone -->
+            <div class="card-dark p-4 mb-4">
+                <div class="drop-zone" id="drop-zone">
+                    <div id="drop-idle">
+                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:14px">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <div style="font-weight:600;color:var(--text-primary);margin-bottom:6px">
+                            Drop your Excel file here
+                        </div>
+                        <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:16px">
+                            or click to browse — .xlsx / .xls only
+                        </div>
+                        <span class="btn-px btn-ghost" style="font-size:.82rem;padding:7px 18px">
+                            Choose file
+                        </span>
+                    </div>
+                    <div id="drop-selected" class="d-none">
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" style="margin-bottom:10px">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <div id="file-name" style="font-weight:600;color:var(--text-primary);margin-bottom:4px"></div>
+                        <div id="file-size" style="font-size:.78rem;color:var(--text-muted)"></div>
+                        <span style="font-size:.75rem;color:var(--text-muted);margin-top:8px;display:block">Click to change file</span>
+                    </div>
+                    <input type="file" name="file" id="file-input"
+                           accept=".xlsx,.xls" required
+                           style="position:absolute;inset:0;opacity:0;cursor:pointer" />
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-4">
+                    <a asp-action="Index" class="btn-px btn-ghost">Cancel</a>
+                    <button type="submit" class="btn-px btn-indigo" id="import-btn" disabled>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Import Excel
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Info card -->
+        <div class="card-dark p-4">
+            <div style="font-weight:600;font-size:.9rem;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Expected Excel structure
+            </div>
+            <div style="font-size:.82rem;color:var(--text-secondary);line-height:1.7">
+                <div class="mb-2">
+                    <span style="color:var(--text-muted)">Sheets:</span>
+                    Architecture, Authentication, Session Management, Access Control, Validation, Cryptography, Error Handling, Data Protection, Communications, Malicious Code, Business Logic, Files and Resources, API, Configuration
+                </div>
+                <div style="background:var(--bg-input);border-radius:var(--radius-sm);padding:10px 14px;font-family:monospace;font-size:.78rem;border:1px solid var(--dark-border)">
+                    <div style="color:var(--text-muted);margin-bottom:4px">Column mapping:</div>
+                    <div>A = Code &nbsp;·&nbsp; C = Level &nbsp;·&nbsp; D = Description</div>
+                    <div>E = CWE &nbsp;·&nbsp; F = Status &nbsp;·&nbsp; G = Notes</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const zone   = document.getElementById('drop-zone');
+    const input  = document.getElementById('file-input');
+    const idle   = document.getElementById('drop-idle');
+    const sel    = document.getElementById('drop-selected');
+    const fname  = document.getElementById('file-name');
+    const fsize  = document.getElementById('file-size');
+    const btn    = document.getElementById('import-btn');
+
+    function showFile(file) {
+        if (!file) return;
+        idle.classList.add('d-none');
+        sel.classList.remove('d-none');
+        fname.textContent = file.name;
+        fsize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+        btn.disabled = false;
+    }
+
+    input.addEventListener('change', () => showFile(input.files[0]));
+
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const file = e.dataTransfer?.files[0];
+        if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            showFile(file);
+        }
+    });
+
+    document.getElementById('import-form').addEventListener('submit', function () {
+        btn.disabled = true;
+        btn.innerHTML = '<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite"></span> Importing…';
+    });
+})();
+</script>
+<style>@@keyframes spin{to{transform:rotate(360deg)}}</style>
+}

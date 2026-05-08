@@ -1,0 +1,69 @@
+<div class="chat-panel" id="chatPanel">
+
+    <!-- Header -->
+    <div class="chat-panel-hdr">
+        <div class="d-flex align-items-center gap-2">
+            <div class="ai-avatar" style="width:28px;height:28px">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/>
+                </svg>
+            </div>
+            <div>
+                <div style="font-weight:600;font-size:.85rem">AI Security Assistant</div>
+                <div style="font-size:.67rem;color:var(--status-done);display:flex;align-items:center;gap:4px">
+                    <span style="width:5px;height:5px;background:var(--status-done);border-radius:50%;display:inline-block"></span>
+                    Online · Llama 3.3 via Groq
+                </div>
+            </div>
+        </div>
+        <!-- Mobile close button -->
+        <button onclick="window.closeChatPanel?.()" class="topbar-icon-btn" style="width:28px;height:28px;border:none;background:transparent" title="Close">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Context banner (shown when opened from a finding) -->
+    <div id="chat-context-banner" class="chat-context-banner d-none">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <strong id="chat-banner-code" style="color:#93C5FD;font-size:.8rem"></strong>
+            <span id="chat-banner-status" class="badge-status badge-missing" style="font-size:.66rem;padding:1px 6px;border-radius:10px"></span>
+        </div>
+        <div id="chat-banner-desc" style="color:var(--text-muted);line-height:1.4;margin-top:1px"></div>
+        <div id="chat-banner-file" style="font-family:monospace;color:var(--text-secondary);font-size:.73rem;margin-top:2px"></div>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chat-messages">
+        <div class="chat-chips-wrap" id="chat-chips">
+            <div style="font-size:.72rem;color:var(--text-muted);margin-bottom:8px">Suggested questions:</div>
+            <div>
+                <span class="chat-chip" data-msg="What are the OWASP ASVS levels and what do they mean?">Explain ASVS levels</span>
+                <span class="chat-chip" data-msg="How do I implement JWT authentication securely?">JWT best practices</span>
+                <span class="chat-chip" data-msg="How should I store passwords securely?">Password storage</span>
+                <span class="chat-chip" data-msg="What is SQL injection and how to prevent it?">SQL injection</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll-to-bottom button -->
+    <button class="scroll-to-bottom" id="scroll-to-bottom" title="Jump to latest">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+        </svg>
+    </button>
+
+    <!-- Input area -->
+    <div class="chat-input-area">
+        <textarea id="chat-input" class="chat-input-field" rows="1"
+                  placeholder="Ask about ASVS security…"
+                  autocomplete="off"></textarea>
+        <button id="chat-send" class="chat-send-btn" title="Send (Enter)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+        </button>
+    </div>
+</div>

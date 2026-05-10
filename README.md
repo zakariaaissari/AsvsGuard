@@ -22,6 +22,8 @@ ASVSGuard is a web application that helps development teams track, assess, and i
 
 
 ### Dashboard
+<img width="1918" height="941" alt="exigencespage" src="https://github.com/user-attachments/assets/2d9b952d-d0b2-4054-8596-1744114b85c7" />
+
 
 
 
@@ -29,12 +31,13 @@ ASVSGuard is a web application that helps development teams track, assess, and i
 
 ### ASVS Requirements List
 
-
+<img width="1919" height="930" alt="dashapage" src="https://github.com/user-attachments/assets/90422607-a6ad-479a-ac50-9e7450d7fd88" />
 
 ---
 
 
 ### AI Explain & Code Generation
+<img width="1505" height="834" alt="Screenshot 2026-05-09 at 20 35 41" src="https://github.com/user-attachments/assets/b49912d3-5e6d-49ad-89ac-c8917f701ddf" />
 
 
 
@@ -42,27 +45,34 @@ ASVSGuard is a web application that helps development teams track, assess, and i
 
 ### Repository Scanner — Scan Form
 
+<img width="1919" height="937" alt="scanningpage" src="https://github.com/user-attachments/assets/72c1c7fb-3fa3-4e74-8c37-6a8953a5b2fc" />
 
 
 ---
 
 ### Repository Scanner — Scan Results
 
+<img width="1916" height="933" alt="scannedpageresult-1" src="https://github.com/user-attachments/assets/2d64bcb3-e32b-47b4-929e-659713b4393f" />
 
 ---
 
 ### AI Security Chat
 
-<!-- screenshot -->
+<img width="1917" height="901" alt="askAIforMissing" src="https://github.com/user-attachments/assets/b921db7f-3f53-4821-8fa8-1dafb644ab6a" />
+
 
 ---
 
 ### Import Excel
+<img width="1505" height="834" alt="Screenshot 2026-05-10 at 14 50 07" src="https://github.com/user-attachments/assets/52743757-c462-4a6c-92a2-525ebf4e52ea" />
 
 
 ---
 
 ### Login / Register
+<img width="1916" height="964" alt="login page" src="https://github.com/user-attachments/assets/837e8dad-bc13-43c1-a9fa-d78959405b43" />
+<img width="1919" height="934" alt="signup" src="https://github.com/user-attachments/assets/3291530a-df68-409a-b5d9-0f1cca3cc1c8" />
+
 
 
 ---

@@ -29,5 +29,4 @@ packages/
 *.tmp
 Thumbs.db
 
-# Claude Code local context (not project code)
-.claude/
+

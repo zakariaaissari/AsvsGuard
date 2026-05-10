@@ -1,9 +1,33 @@
+# Build output
 bin/
 obj/
-appsettings.Development.json
+
+# User-specific / IDE
 *.user
-.rider/
-.vs/
 *.suo
+.vs/
+.rider/
+.idea/
 .DS_Store
 
+# Local secrets & dev config (never commit)
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+secrets.json
+
+# dotnet user-secrets store (local machine only)
+**/secrets.json
+
+# NuGet
+*.nupkg
+.nuget/
+packages/
+
+# Logs & temp
+*.log
+*.tmp
+Thumbs.db
+
+# Claude Code local context (not project code)
+.claude/

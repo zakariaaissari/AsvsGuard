@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OWASPAsvs", "OWASPAsvs\OWASPAsvs.csproj", "{19903C46-825E-46AB-9145-2EDF51F9EBED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASVSGuard", "ASVSGuard\ASVSGuard.csproj", "{19903C46-825E-46AB-9145-2EDF51F9EBED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

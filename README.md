@@ -1,46 +1,83 @@
-# ASVS Platform
+# ASVSGuard
 
-An AI-powered security compliance platform that maps your codebase against the [OWASP Application Security Verification Standard (ASVS) 4.0](https://owasp.org/www-project-application-security-verification-standard/) — 286 requirements across 14 categories.
+ASVSGuard is a web application that helps development teams track, assess, and improve their compliance with the [OWASP Application Security Verification Standard (ASVS) 4.0](https://owasp.org/www-project-application-security-verification-standard/) — 286 requirements across 14 security categories. It combines a structured requirements browser, an AI-powered GitHub repository scanner, and an interactive security assistant into a single platform.
 
 ---
 
-## Features
+## Table of Contents
+
+- [Features](#features)
+- [Interfaces](#interfaces)
+- [Tech Stack](#tech-stack)
+- [Architecture Overview](#architecture-overview)
+- [Project Structure](#project-structure)
+- [Configuration Reference](#configuration-reference)
+- [Getting Started (Local)](#getting-started-local)
+- [Deployment (Railway / Docker)](#deployment-railway--docker)
+- [License](#license)
+
+---
+
+## Interfaces
+
 
 ### Dashboard
-- Overview of all ASVS exigences grouped by level (L1 / L2 / L3)
-- Category breakdown bar chart
-- Recent scan history with compliance status
 
-### Exigence Browser
-- Browse all 286 ASVS 4.0 requirements
-- Real-time client-side filtering by keyword, level, category, and compliance status
-- Per-requirement detail page with AI explanation and code generation
 
-### Repository Scanner
-- Paste any public GitHub repository URL — no cloning required
-- Fetches the top 15 security-relevant source files via the GitHub REST API
-- Sends them to Llama 3.3 70B (via Groq) in batches for ASVS compliance analysis
-- Produces a compliance ring, per-category breakdown, and finding cards with exact file + line numbers
-- Supports C#, JavaScript, TypeScript, Java, Python, Go, PHP
 
-### AI Tools
-- **Explain** — get a plain-English explanation of any ASVS requirement
-- **Generate code** — produce a secure implementation example in C#, JavaScript, Python, Java, or Go
-- **Ask AI** — from any scan finding, open the chat panel pre-loaded with context and ask how to fix it
+---
 
-### AI Chat Panel
-- Persistent right-column chat assistant (desktop) / bottom drawer (mobile)
-- Streamed responses via Server-Sent Events
-- Pre-loaded with finding context when opened from a scan result
-- Powered by Llama 3.3 70B via Groq (free tier, 14 400 req/day)
+### ASVS Requirements List
 
-### Excel Import
-- Drag-and-drop import of the official ASVS Excel spreadsheet
-- Parses all 286 requirements with code, level, description, CWE, and status
 
-### Authentication
-- Cookie-based authentication with ASP.NET Core Identity
-- Register / Login / Logout
+
+---
+
+
+### AI Explain & Code Generation
+
+
+
+---
+
+### Repository Scanner — Scan Form
+
+
+
+---
+
+### Repository Scanner — Scan Results
+
+
+---
+
+### AI Security Chat
+
+<!-- screenshot -->
+
+---
+
+### Import Excel
+
+
+---
+
+### Login / Register
+
+
+---
+## Features
+
+- **Dashboard** — overview of all ASVS requirements grouped by level (L1 / L2 / L3) and category, with recent scan history per user.
+- **ASVS Requirements Browser** — browse, filter, and search all 286 ASVS 4.0 requirements by keyword, category, level, and compliance status in real time.
+- **Excel Import** — import the official ASVS Excel spreadsheet to seed or update the requirements database.
+- **AI Repository Scanner** — paste any GitHub repository URL; the scanner fetches the top security-relevant source files via the GitHub REST API and sends them to an LLM in batches. Each ASVS requirement is evaluated against the actual code, producing findings with file path, line number, vulnerable code snippet, and fix suggestion.
+- **Compliance Report** — visual breakdown of Present / Partial / Missing findings grouped by category, with an overall compliance percentage score.
+- **AI Explain** — generate a plain-language explanation of any ASVS requirement on demand.
+- **AI Code Generation** — produce a secure implementation example for a requirement in the language of your choice (C#, JavaScript, TypeScript, Python, Java, Go).
+- **AI Security Chat** — a streaming chat assistant that can be pre-loaded with the context of any scan finding so developers can ask targeted remediation questions.
+- **User Accounts** — registration, login, and per-user scan history via ASP.NET Core Identity.
+- **Health Check** — `/health` endpoint ready for deployment probes.
 
 ---
 
@@ -48,177 +85,233 @@ An AI-powered security compliance platform that maps your codebase against the [
 
 | Layer | Technology |
 |---|---|
-| Framework | ASP.NET Core 9 MVC |
-| Database | PostgreSQL (Npgsql EF Core) |
-| AI Model | Llama 3.3 70B Versatile via Groq API |
-| Excel parsing | ClosedXML |
-| Frontend | Bootstrap 5, Vanilla JS, Inter + JetBrains Mono fonts |
-| Deployment | Railway (Docker / Nixpacks) |
+| Framework | ASP.NET Core 9.0 (MVC) |
+| ORM | Entity Framework Core 9 + Npgsql |
+| Database | PostgreSQL |
+| Authentication | ASP.NET Core Identity (cookie-based) |
+| AI Provider | Groq API (primary) · HuggingFace Inference Router (fallback) |
+| LLM | Llama 3.3 70B Versatile (chat / scan) · DeepSeek V3 (code generation) |
+| Excel Parsing | ClosedXML |
+| Frontend | Bootstrap 5 · Vanilla JS · Inter + JetBrains Mono fonts |
+| Containerisation | Docker |
+| Cloud Deployment | Railway |
 
 ---
 
-## Local Setup
+## Architecture Overview
 
-### Prerequisites
-- [.NET 9 SDK](https://dotnet.microsoft.com/download)
-- PostgreSQL running locally (or a connection string to a remote instance)
-- A free [Groq API key](https://console.groq.com)
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/<your-username>/<your-repo>.git
-cd <your-repo>/OWASPAsvs
-```
-
-### 2. Configure secrets
-
-Create `appsettings.Development.json` in the `OWASPAsvs/` folder (this file is git-ignored):
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=owaspasvs;Username=postgres;Password=yourpassword"
-  },
-  "Groq": {
-    "ApiKey": "gsk_YOUR_GROQ_KEY_HERE"
-  },
-  "GitHub": {
-    "Token": "ghp_YOUR_OPTIONAL_GITHUB_PAT"
-  }
-}
-```
-
-> The `GitHub.Token` is optional for public repos — it raises the rate limit from 60 to 5 000 req/hour.
-
-### 3. Apply database migrations
-
-```bash
-dotnet ef database update
-```
-
-### 4. Run
-
-```bash
-dotnet run
-```
-
-Open `http://localhost:5000`, register an account, then import the ASVS Excel file from the **Import Excel** page.
-
----
-
-## Configuration Reference
-
-All settings live in `appsettings.json` (committed, no secrets) and are overridden by `appsettings.Development.json` (git-ignored) or environment variables in production.
-
-| Key | Description | Required |
-|---|---|---|
-| `ConnectionStrings:DefaultConnection` | PostgreSQL connection string | Yes |
-| `Groq:ApiKey` | Groq API key — primary AI provider | Yes (or HuggingFace) |
-| `Groq:ModelChat` | Chat + explain model (default: `llama-3.3-70b-versatile`) | No |
-| `Groq:ModelCode` | Code generation model | No |
-| `Groq:ModelScan` | Repo scan model | No |
-| `HuggingFace:ApiKey` | HuggingFace Inference Router key — fallback if no Groq key | No |
-| `HuggingFace:Provider` | Router provider (default: `together`) | No |
-| `GitHub:Token` | GitHub PAT — increases rate limit, required for private repos | No |
-
-The app auto-detects the provider: if `Groq:ApiKey` is set it uses `api.groq.com`; otherwise it falls back to `router.huggingface.co`.
-
----
-
-## Deployment on Railway
-
-1. Push this repo to GitHub (see below)
-2. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
-3. Add a **PostgreSQL** plugin to the project
-4. Set the following environment variables in Railway:
+The application follows a layered architecture. All dependency wiring lives in `Infrastructure/DependencyInjection.cs`.
 
 ```
-ASPNETCORE_ENVIRONMENT=Production
-DATABASE_URL=<auto-filled by Railway PostgreSQL plugin>
-Groq__ApiKey=gsk_...
-GitHub__Token=ghp_...   # optional
+┌──────────────────────────────────────────┐
+│               Controllers                 │  HTTP — MVC actions (thin)
+├──────────────────────────────────────────┤
+│                Services                   │  Business logic
+├────────────────────┬─────────────────────┤
+│    Repositories    │   External Clients   │  EF Core data access · GitHub API · LLM API
+├────────────────────┴─────────────────────┤
+│           Entity Framework Core           │  ORM + Migrations
+├──────────────────────────────────────────┤
+│                PostgreSQL                 │  Persistent storage
+└──────────────────────────────────────────┘
 ```
 
-> Railway uses `__` as the separator for nested keys (e.g. `Groq__ApiKey` maps to `Groq:ApiKey`).
-
-5. Railway will build and deploy automatically on every push to `main`.
-
----
-
-## Pushing to GitHub
-
-### First time — create the remote and push
-
-```bash
-# Inside the OWASPAsvs/ folder (where .git lives)
-
-# 1. Set your identity (skip if already configured globally)
-git config user.name "Your Name"
-git config user.email "you@example.com"
-
-# 2. Add the remote (replace with your repo URL)
-git remote add origin https://github.com/<your-username>/<your-repo>.git
-
-# 3. Stage everything (gitignore already excludes secrets and dev files)
-git add .
-
-# 4. Commit
-git commit -m "feat: initial commit — ASVS Platform"
-
-# 5. Push
-git push -u origin main
-```
-
-### Subsequent pushes
-
-```bash
-git add .
-git commit -m "your message"
-git push
-```
-
-### Authentication
-
-If GitHub prompts for a password, use a **Personal Access Token** (PAT) instead:
-
-1. GitHub → Settings → Developer settings → Personal access tokens → **Tokens (classic)**
-2. Generate a token with `repo` scope
-3. Use it as the password when `git push` asks
-
-Or configure the credential helper once:
-
-```bash
-git config --global credential.helper store
-# then push once — credentials are saved for future pushes
-```
+AI provider selection is automatic: if `Groq:ApiKey` is set the application routes all LLM calls to `api.groq.com`; otherwise it falls back to `router.huggingface.co`. Both providers expose an OpenAI-compatible `/chat/completions` endpoint, so switching is configuration-only.
 
 ---
 
 ## Project Structure
 
 ```
-OWASPAsvs/
+ASVSGuard/
+├── Controllers/
+│   ├── AccountController.cs        # Register / Login / Logout
+│   ├── AIController.cs             # POST /AI/Explain  ·  POST /AI/GenerateCode
+│   ├── ChatController.cs           # POST /Chat/Send (SSE stream)  ·  GET /Chat/History
+│   ├── ExigenceController.cs       # Requirements list, detail, import, status update
+│   ├── HomeController.cs           # Dashboard
+│   └── RepoController.cs           # Scan form  ·  Scan result page
+│
 ├── Core/
-│   ├── Entities/          # Domain models (Exigence, RepoScan, ScanFinding…)
-│   ├── Interfaces/        # Repository + service contracts
-│   └── Services/          # Business logic (AIService, RepoScanService…)
+│   ├── Entities/
+│   │   ├── ChatMessage.cs
+│   │   ├── ChatSession.cs
+│   │   ├── Exigence.cs             # ASVS requirement
+│   │   ├── ExigenceStatus.cs       # Unknown / Compliant / Missing
+│   │   ├── FindingStatus.cs        # Present / Partial / Missing
+│   │   ├── RepoScan.cs
+│   │   ├── RepoScanStatus.cs       # Pending / Running / Done / Failed
+│   │   └── ScanFinding.cs          # One finding per requirement per scan
+│   ├── Interfaces/
+│   │   ├── IAIHttpClient.cs        # CompleteAsync + StreamAsync
+│   │   ├── IChatRepository.cs
+│   │   ├── IExcelParser.cs
+│   │   ├── IExigenceRepository.cs
+│   │   └── IRepoScanRepository.cs
+│   └── Services/
+│       ├── AIService.cs            # ExplainExigence · GenerateCode · StreamChat
+│       ├── ChatService.cs          # Session management + message persistence
+│       ├── ExigenceService.cs      # Filtering · import · status updates
+│       └── RepoScanService.cs      # Orchestrates full repository scan pipeline
+│
 ├── Infrastructure/
-│   ├── Data/              # EF Core DbContext + repositories
-│   ├── Parsers/           # ExcelExigenceParser, GitHubMcpClient, HuggingFaceClient
-│   └── DependencyInjection.cs
-├── Controllers/           # Thin MVC controllers
-├── Models/                # ViewModels only
-├── Views/                 # Razor views + shared layout
-├── Migrations/            # EF Core auto-generated
-├── wwwroot/               # CSS, JS, static assets
-├── appsettings.json       # Default config (no secrets)
+│   ├── Data/
+│   │   ├── AppDbContext.cs
+│   │   ├── ChatRepository.cs
+│   │   ├── ExigenceRepository.cs
+│   │   └── RepoScanRepository.cs
+│   ├── Parsers/
+│   │   ├── ExcelExigenceParser.cs  # ClosedXML — parses ASVS Excel workbook
+│   │   ├── GitHubMcpClient.cs      # GitHub REST API — fetches & scores source files
+│   │   └── HuggingFaceClient.cs    # IAIHttpClient implementation (Groq / HuggingFace)
+│   └── DependencyInjection.cs      # All service registrations + Identity + HttpClients
+│
+├── Migrations/                     # EF Core migration history (auto-generated)
+├── Models/                         # ViewModels (Dashboard, ScanResult, Exigence filters)
+├── Views/                          # Razor views + shared layouts
+│   ├── Account/                    # Login · Register
+│   ├── Exigence/                   # Index · Detail · Import
+│   ├── Home/                       # Dashboard
+│   ├── Repo/                       # Scan form · Result
+│   └── Shared/                     # _Layout · _AuthLayout · _ChatWidget
+├── wwwroot/
+│   ├── css/site.css
+│   ├── js/
+│   │   ├── app.js                  # Filtering, AI buttons, scan progress, sidebar
+│   │   └── chat.js                 # SSE chat widget
+│   └── lib/                        # Bootstrap · jQuery · validation
+├── appsettings.json                # Default config (no secrets committed)
+├── appsettings.Development.json    # Local overrides — git-ignored
 ├── Dockerfile
-└── railway.toml
+├── railway.toml
+└── Program.cs
 ```
 
 ---
 
+## Configuration Reference
+
+All settings live in `appsettings.json`. Override them locally via `appsettings.Development.json` (git-ignored) or in production via environment variables.
+
+| Key | Description | Required |
+|---|---|---|
+| `ConnectionStrings:DefaultConnection` | Npgsql PostgreSQL connection string | Yes |
+| `Groq:ApiKey` | [Groq](https://console.groq.com) API key — activates Groq as primary AI provider | One of the two |
+| `Groq:ModelChat` | Model for chat & explain (default: `llama-3.3-70b-versatile`) | No |
+| `Groq:ModelCode` | Model for code generation (default: `llama-3.3-70b-versatile`) | No |
+| `Groq:ModelScan` | Model for repository scanning (default: `llama-3.3-70b-versatile`) | No |
+| `HuggingFace:ApiKey` | [HuggingFace](https://huggingface.co/settings/tokens) inference token — used when no Groq key is set | One of the two |
+| `HuggingFace:Provider` | Router provider slug (default: `together`) | No |
+| `HuggingFace:ModelChat` | Model for chat (default: `meta-llama/Llama-3.3-70B-Instruct-Turbo`) | No |
+| `HuggingFace:ModelCode` | Model for code generation (default: `deepseek-ai/DeepSeek-V3`) | No |
+| `HuggingFace:ModelScan` | Model for scanning (default: `meta-llama/Llama-3.3-70B-Instruct-Turbo`) | No |
+
+### Environment variables (production overrides)
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Railway-style URL (`postgresql://user:pass@host:port/db`). Takes priority over `ConnectionStrings:DefaultConnection`. |
+| `PORT` | Kestrel HTTP port (set automatically by Railway). |
+| `Groq__ApiKey` | Nested key separator for Railway / Docker env vars (`__` maps to `:`). |
+
+---
+
+## Getting Started (Local)
+
+### Prerequisites
+
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- PostgreSQL (any recent version)
+- A [Groq API key](https://console.groq.com) **or** a [HuggingFace token](https://huggingface.co/settings/tokens)
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/<your-username>/asvs-owasp-DevAI.git
+cd asvs-owasp-DevAI/ASVSGuard
+```
+
+### 2. Create the local configuration file
+
+Create `appsettings.Development.json` in the `ASVSGuard/` folder (this file is git-ignored):
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=asvs_guard;Username=<pg_user>;Password=<pg_password>"
+  },
+  "Groq": {
+    "ApiKey": "<your-groq-api-key>"
+  },
+  "GitHub": {
+    "Token": "<optional-github-pat>"
+  }
+}
+```
+
+> The `GitHub.Token` is optional for public repositories. It raises the GitHub REST API rate limit from 60 to 5 000 requests per hour and is required for private repositories.
+
+> To use HuggingFace instead of Groq, leave `Groq:ApiKey` empty and set `HuggingFace:ApiKey`.
+
+### 3. Restore NuGet packages
+
+```bash
+dotnet restore
+```
+
+### 4. Apply database migrations
+
+```bash
+dotnet ef database update
+```
+
+Migrations also run automatically on startup, so this step is optional for local development.
+
+### 5. Run
+
+```bash
+dotnet run
+```
+
+Open `http://localhost:5000`, register an account, then go to **Exigences → Import** and upload the official ASVS 4.0 Excel spreadsheet (available at the [OWASP ASVS GitHub repository](https://github.com/OWASP/ASVS/tree/v4.0.3/4.0)).
+
+---
+
+## Deployment (Railway / Docker)
+
+The project ships with a multi-stage `Dockerfile` and a pre-configured `railway.toml`.
+
+### Railway
+
+1. Push the repository to GitHub.
+2. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**.
+3. Add a **PostgreSQL** plugin to the project (Railway fills `DATABASE_URL` automatically).
+4. Set the following environment variables in the Railway dashboard:
+
+```
+Groq__ApiKey=gsk_...
+GitHub__Token=ghp_...    # optional
+```
+
+Railway uses `__` as the key-path separator (e.g. `Groq__ApiKey` → `Groq:ApiKey`).
+
+The `/health` endpoint is pre-registered as the health-check path in `railway.toml`.
+
+### Docker (manual)
+
+```bash
+# Build
+docker build -t asvs-guard .
+
+# Run
+docker run -p 8080:8080 \
+  -e DATABASE_URL="postgresql://user:pass@host:5432/asvs_guard" \
+  -e Groq__ApiKey="gsk_..." \
+  asvs-guard
+```
+
+
+
 ## License
 
-MIT
+

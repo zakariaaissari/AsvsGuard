@@ -6,8 +6,8 @@ ASVSGuard is a web application that helps development teams track, assess, and i
 
 ## Table of Contents
 
-- [Features](#features)
 - [Interfaces](#interfaces)
+- [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Architecture Overview](#architecture-overview)
 - [Project Structure](#project-structure)
